@@ -31,8 +31,9 @@ int main() {
             global_process_mutex.unlock();
         }
     }
+    sleep(1);   // wait parent and child to end
     printf("pid= %d, x_address= %p, x= %d\n", getpid(), x, *x);
-    sleep(1);
+    sleep(1);   // wait parent to end
     if (pid > 0) { 
         shared_memory_com::destroy_shm(shmid, (const void *)x);
         printf("parent process exit.\n");
