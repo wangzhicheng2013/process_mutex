@@ -1,0 +1,1 @@
+g++ -std=c++11 -std=gnu++1z -g -o Test test.cpp -I ./ -lpthread
