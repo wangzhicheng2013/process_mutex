@@ -41,7 +41,18 @@ namespace shared_memory_com {
         }
         return 0;
     }
-    inline bool get_shm_info_by_shmid(key_t shmid, shm_info &info) {
+    static int remove_shm(int shmid) {
+        if (shmid < 0) {
+            std::cerr << "shm id:" << shmid << " error." << std::endl;
+            return -1;
+        }
+        if (shmctl(shmid, IPC_RMID, nullptr) < 0) {     // remove first
+            std::cerr << "shmctl IPC_RMID error." << std::endl;
+            return -2;
+        }
+        return 0;
+    }
+    static bool get_shm_info_by_shmid(key_t shmid, shm_info &info) {
         struct shmid_ds buf = { 0 };
         if (shmctl(shmid, IPC_STAT, &buf)) {
             return false;
