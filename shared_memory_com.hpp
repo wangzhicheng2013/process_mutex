@@ -6,6 +6,10 @@
 #include <sys/shm.h>
 #include <iostream>
 namespace shared_memory_com {
+    struct shm_info {
+        size_t size = 0;
+        int attach_num = 0;
+    };
     static int create_shm(const char *path, int id, size_t size, int flags) {
         key_t key = ftok(path, id);
         if (key < 0) {
@@ -36,5 +40,14 @@ namespace shared_memory_com {
             shmdt(shm_addr);
         }
         return 0;
+    }
+    inline bool get_shm_info_by_shmid(key_t shmid, shm_info &info) {
+        struct shmid_ds buf = { 0 };
+        if (shmctl(shmid, IPC_STAT, &buf)) {
+            return false;
+        }
+        info.size = buf.shm_segsz;
+        info.attach_num = buf.shm_nattch;
+        return true;
     }
 }
