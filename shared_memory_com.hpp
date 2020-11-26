@@ -41,7 +41,7 @@ namespace shared_memory_com {
         }
         return 0;
     }
-    static int remove_shm(int shmid) {
+    static int remove_shm_by_shmid(int shmid) {
         if (shmid < 0) {
             std::cerr << "shm id:" << shmid << " error." << std::endl;
             return -1;
@@ -52,7 +52,7 @@ namespace shared_memory_com {
         }
         return 0;
     }
-    static bool get_shm_info_by_shmid(key_t shmid, shm_info &info) {
+    static bool get_shm_info_by_shmid(int shmid, shm_info &info) {
         struct shmid_ds buf = { 0 };
         if (shmctl(shmid, IPC_STAT, &buf)) {
             return false;
@@ -60,5 +60,38 @@ namespace shared_memory_com {
         info.size = buf.shm_segsz;
         info.attach_num = buf.shm_nattch;
         return true;
+    }
+    static size_t get_shm_size_by_key(key_t key) {
+        char cmd[64] = "";
+        snprintf(cmd, sizeof(cmd), "ipcs -m | grep 0x%08x | awk '{print $5}'", key);
+        FILE *fp = popen(cmd, "r");
+        if (!fp) {
+            return 0;
+        }
+        char buf[64] = "";
+        size_t size = 0;
+        if (fgets(buf, sizeof(buf), fp)) {
+            size = atoi(buf);
+        }
+        pclose(fp);
+        usleep(100); // let subprocess to end
+        return size;
+    }
+    static bool remove_shm_by_key(key_t key) {
+        char cmd[64] = "";
+        snprintf(cmd, sizeof(cmd), "ipcs -m | grep 0x%08x | awk '{print $2}'", key);
+        FILE *fp = popen(cmd, "r");
+        if (!fp) {
+            return false;
+        }
+        char shmid[64] = "";
+        bool succ = false;
+        if (fgets(shmid, sizeof(shmid), fp)) {
+            snprintf(cmd, sizeof(cmd), "ipcrm -m %s", shmid);
+            succ = !system(cmd);
+            usleep(100); // let subprocess to end
+        }
+        pclose(fp);
+        return succ;
     }
 }
