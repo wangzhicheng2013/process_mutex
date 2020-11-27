@@ -23,6 +23,14 @@ namespace shared_memory_com {
         }
         return shmid;
     }
+    static void *create_shm(key_t key, size_t size) {
+        int shm_id = shmget(key, size, IPC_CREAT | 0666);
+        if (shm_id < 0) {
+            std::cerr << "shmget failed for key:" << key << std::endl;
+            return nullptr;
+        }
+        return shmat(shm_id, 0, 0);
+    }
     template <typename T>
     static T *get_shm(int shmid, int flags = 0) {
         return static_cast<T *>(shmat(shmid, nullptr, flags));
